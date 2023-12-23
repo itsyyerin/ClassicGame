@@ -1,0 +1,91 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+public class ThreadedGame extends JFrame {
+
+    private static final int WIDTH = 400;
+    private static final int HEIGHT = 400;
+    private static final int PLAYER_SIZE = 20;
+    private static final int PLAYER_SPEED = 5;
+
+    private int playerX = WIDTH / 2 - PLAYER_SIZE / 2;
+    private int playerY = HEIGHT - PLAYER_SIZE - 20;
+
+    public ThreadedGame() {
+        setTitle("Threaded Game");
+        setSize(WIDTH, HEIGHT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                movePlayer(e);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        });
+
+        setFocusable(true);
+    }
+
+    private void movePlayer(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+
+        if (keyCode == KeyEvent.VK_LEFT && playerX > 0) {
+            playerX -= PLAYER_SPEED;
+        } else if (keyCode == KeyEvent.VK_RIGHT && playerX < WIDTH - PLAYER_SIZE) {
+            playerX += PLAYER_SPEED;
+        }
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+
+        g.setColor(Color.BLUE);
+        g.fillRect(playerX, playerY, PLAYER_SIZE, PLAYER_SIZE);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ThreadedGame game = new ThreadedGame();
+                game.setVisible(true);
+
+                game.startGameLoop();
+            }
+        });
+    }
+
+    private void startGameLoop() {
+        // 게임 루프를 위한 스레드 생성 및 시작
+        Thread gameThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    // 게임 로직 처리
+                    // (이 예제에서는 추가적인 게임 로직이 없습니다.)
+
+                    // 그래픽 업데이트
+                    repaint();
+
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        gameThread.start(); // 스레드 시작
+    }
+}

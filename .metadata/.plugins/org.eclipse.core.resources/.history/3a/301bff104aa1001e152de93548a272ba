@@ -1,0 +1,163 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+public class ExtendedGame extends JFrame {
+
+    private static final int WIDTH = 400;
+    private static final int HEIGHT = 400;
+    private static final int PLAYER_SIZE = 20;
+    private static final int LARGE_RECTANGLE_SIZE = 30;
+    private static final int PLAYER_SPEED = 5;
+    private static final int GAME_DURATION = 10000; // 10 seconds
+
+    private int playerX = WIDTH / 2 - PLAYER_SIZE / 2;
+    private int playerY = HEIGHT - PLAYER_SIZE - 20;
+
+    private int largeRectangleX;
+    private int largeRectangleY;
+
+    private boolean gameRunning = true;
+
+    public ExtendedGame() {
+        setTitle("Extended Game");
+        setSize(WIDTH, HEIGHT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                movePlayer(e);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        });
+
+        setFocusable(true);
+
+        // 큰 사각형의 위치를 랜덤으로 설정
+        generateRandomLargeRectanglePosition();
+
+        // 10초 동안 게임이 진행되도록 타이머 설정
+        Timer timer = new Timer(GAME_DURATION, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gameRunning = false;
+                showResultDialog();
+            }
+        });
+        timer.setRepeats(false); // 타이머를 한 번만 실행
+        timer.start();
+        
+        // 게임 루프를 시작하는 부분 추가
+        startGameLoop();
+    }
+
+    private void movePlayer(KeyEvent e) {
+        if (!gameRunning) {
+            return; // 게임이 종료된 경우 플레이어 이동 불가
+        }
+
+        int keyCode = e.getKeyCode();
+
+        if (keyCode == KeyEvent.VK_LEFT && playerX > 0) {
+            playerX -= PLAYER_SPEED;
+        } else if (keyCode == KeyEvent.VK_RIGHT && playerX < WIDTH - PLAYER_SIZE) {
+            playerX += PLAYER_SPEED;
+        }
+
+        checkCollision(); // 충돌 체크
+    }
+
+    private void checkCollision() {
+        Rectangle playerRect = new Rectangle(playerX, playerY, PLAYER_SIZE, PLAYER_SIZE);
+        Rectangle largeRect = new Rectangle(largeRectangleX, largeRectangleY, LARGE_RECTANGLE_SIZE, LARGE_RECTANGLE_SIZE);
+
+        if (playerRect.intersects(largeRect)) {
+            gameRunning = false;
+            showResultDialog();
+        }
+
+        // 그래픽 업데이트를 EDT에서 실행
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                repaint();
+            }
+        });
+    }
+
+    private void generateRandomLargeRectanglePosition() {
+        largeRectangleX = (int) (Math.random() * (WIDTH - LARGE_RECTANGLE_SIZE));
+        largeRectangleY = (int) (Math.random() * (HEIGHT - LARGE_RECTANGLE_SIZE));
+    }
+
+    private void showResultDialog() {
+        if (gameRunning) {
+            JOptionPane.showMessageDialog(this, "성공! 10초 안에 성공적으로 도달했습니다.");
+        } else {
+            JOptionPane.showMessageDialog(this, "실패! 10초 동안 목표 지점에 도달하지 못했습니다.");
+        }
+        System.exit(0);
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+
+        g.setColor(Color.BLUE);
+        g.fillRect(playerX, playerY, PLAYER_SIZE, PLAYER_SIZE);
+
+        g.setColor(Color.RED);
+        g.fillRect(largeRectangleX, largeRectangleY, LARGE_RECTANGLE_SIZE, LARGE_RECTANGLE_SIZE);
+
+        // 남은 시간을 게임 창에 표시
+        if (gameRunning) {
+            int remainingTime = GAME_DURATION / 1000;
+            g.drawString("Time Remaining: " + remainingTime + " seconds", 10, 20);
+        }
+    }
+
+    private void startGameLoop() {
+        // 게임 루프를 위한 스레드 생성 및 시작
+        Thread gameThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (gameRunning) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    // 그래픽 업데이트를 EDT에서 실행
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            repaint();
+                        }
+                    });
+                }
+            }
+        });
+
+        gameThread.start(); // 스레드 시작
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ExtendedGame game = new ExtendedGame();
+                game.setVisible(true);
+            }
+        });
+    }
+}

@@ -1,0 +1,82 @@
+package hello;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import com.mysql.cj.result.Field;
+
+public class DB {
+
+	private String dbFileName;
+	private String tableName;
+	private Connection connection;
+	static {
+		try {	// 이 이름을 가진 DB가 없을 수도 있기 때문에 try~catch
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public DB (String dbFileName, String tableName) {
+		this.dbFileName = dbFileName;
+		this.tableName = tableName;
+	}
+	
+	public boolean open() {
+		SQLiteConfig config = new SQLiteConfig();
+		try {
+			this.connection = DriverManager.getConnection("jdbc:sqlite:/" + this.dbFileName, config.toProperties());
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public void close() {
+		if (this.connection != null) {
+			try {
+				this.connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void createTable(T t) {	// 기존에는 Student student라고 해서 Student라는 객체가 들어온다 명시를 했다. T는 어떤 객체가 들어올지 모른단 뜻. DB를 DB<T>로 Generic(제네릭)을 사용한다.
+		Class<?> dataClass = t.getClass();	// t의 Class Object를 가져와 return해서 dataClass라는 변수명에 저장.
+		Field[] dataClassFields = dataClass.getDeclaredFields();	// dataClass라는 클래스의 변수들을 array로 return.
+		
+		String fieldString = "";
+		
+		for (Field field: dataClassFields) {	//  array로부터 for each 문을 돌면서 하나씩 분해해 쿼리에 넣을 문자열을 만든다.
+			if (!fieldString.isEmpty()) {
+				fieldString = fieldString + ",";
+			}
+			String fieldName = field.getName();
+			String fieldType = field.getType().toString();
+			fieldString = fieldString + fieldName;
+			if (fieldName.matches("idx")) {
+				fieldString = fieldString + " INTEGER PRIMARY KEY AUTOINCREMENT";
+			} else if (fieldType.matches("(int|long)")) {
+				fieldString = fieldString + " INTEGER";
+			} else if (fieldType.matches("(float|double)")) {
+				fieldString = fieldString + " REAL";
+			} else if (fieldType.matches(".*String")) {
+				fieldString = fieldString + " TEXT";
+			}
+		}
+		
+		String query = "CREATE TABLE " + this.tableName + " (" + fieldString + ")";
+		try {
+			Statement statement = this.connection.createStatement();
+			statement.executeUpdate(query);
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+}

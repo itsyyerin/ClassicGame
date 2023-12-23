@@ -1,0 +1,17 @@
+package hello;
+
+import java.sql.Connection;
+import java.sql.Statement;
+
+public class student {
+	String dbDriver = "com.mysql.jdbc.Driver";
+	String url = "jdbc:mysql://localhost:3306/book_db?characterEncoding=UTF-8&serverTimezone=UTC";
+	String id = "root";
+	String password = "";
+	Connection con = null;
+	Statement stmt = null;
+	
+	
+	
+	
+}

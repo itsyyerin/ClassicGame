@@ -1,0 +1,23 @@
+package hello;
+
+import java.sql.Connection;
+import java.sql.Statement;
+
+public class student {
+	
+	int sutld;
+	String name;
+	int tel;
+	String dept;
+	
+	student(){
+	}
+	
+	public student(String name, int sutld, int tel, String dept) {
+		this.name = name;
+		this.sutld = sutld;
+		this.tel = tel;
+		this.dept = dept;
+	}
+	
+}

@@ -1,0 +1,27 @@
+package hello;
+
+import java.lang.System.Logger;
+import java.util.Locale;
+
+import org.*;
+
+
+
+public class HomeController {
+	private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
+
+	// 쿼리를 이용해 테이블 생성하기.
+	public String create(Locale locale, Model model) {
+		DB db = new DB<student>("경로 및 DB 파일 이름", "student");
+		
+		if (db.open()) {
+			db.createTable(new student());
+			model.addAttribute("message", "create success");
+			db.close();
+		} else {
+			model.addAttribute("message", "DB파일을 사용할 수 없습니다.");
+		}
+		
+		return "message";
+	}	
+}

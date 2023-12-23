@@ -1,0 +1,95 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+public class ThreadedGame extends JFrame {
+
+    private static final int WIDTH = 400;
+    private static final int HEIGHT = 400;
+    private static final int PLAYER_SIZE = 20;
+    private static final int PLAYER_SPEED = 5;
+
+    private int playerX = WIDTH / 2 - PLAYER_SIZE / 2;
+    private int playerY = HEIGHT - PLAYER_SIZE - 20;
+
+    public ThreadedGame() {
+        setTitle("Threaded Game");
+        setSize(WIDTH, HEIGHT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // 키 이벤트 처리를 위한 KeyListener 등록
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                movePlayer(e);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        });
+
+        setFocusable(true); // 키 이벤트가 받아들여지도록 포커스 설정
+    }
+
+    private void movePlayer(KeyEvent e) {
+        // 플레이어 이동 처리
+        int keyCode = e.getKeyCode();
+
+        if (keyCode == KeyEvent.VK_LEFT && playerX > 0) {
+            playerX -= PLAYER_SPEED;
+        } else if (keyCode == KeyEvent.VK_RIGHT && playerX < WIDTH - PLAYER_SIZE) {
+            playerX += PLAYER_SPEED;
+        }
+
+        repaint(); // 화면 갱신
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+
+        // 플레이어 그리기
+        g.setColor(Color.BLUE);
+        g.fillRect(playerX, playerY, PLAYER_SIZE, PLAYER_SIZE);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ThreadedGame game = new ThreadedGame();
+                game.setVisible(true);
+
+                // 게임 루프 시작
+                game.startGameLoop();
+            }
+        });
+    }
+
+    private void startGameLoop() {
+        // 게임 루프를 위한 스레드 생성 및 시작
+        Thread gameThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    // 게임 로직 처리
+                    // 여기에 추가적인 게임 로직을 구현할 수 있습니다.
+
+                    repaint(); // 화면 갱신
+
+                    try {
+                        Thread.sleep(10); // 게임 루프의 간격 (10밀리초)
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        gameThread.start(); // 스레드 시작
+    }
+}
